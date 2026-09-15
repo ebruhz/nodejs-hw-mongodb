@@ -8,9 +8,24 @@ import {
     updateContact,
     deleteContact,
 } from '../services/contacts.js';
-
 export const getAllContactsController = async (req, res) => {
-    const contacts = await getAllContacts();
+    const {
+        page = 1,
+        perPage = 10,
+        sortBy = 'name',
+        sortOrder = 'asc',
+        type,
+        isFavourite,
+    } = req.query;
+
+    const contacts = await getAllContacts({
+        page: Number(page),
+        perPage: Number(perPage),
+        sortBy,
+        sortOrder,
+        type,
+        isFavourite,
+    });
 
     res.status(200).json({
         status: 200,
