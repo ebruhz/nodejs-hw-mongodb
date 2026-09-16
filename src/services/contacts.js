@@ -1,6 +1,7 @@
 import { Contact } from '../db/contact.js';
 
 export const getAllContacts = async ({
+    userId,
     page = 1,
     perPage = 10,
     sortBy = 'name',
@@ -8,7 +9,9 @@ export const getAllContacts = async ({
     type,
     isFavourite,
 }) => {
-    const filter = {};
+    const filter = {
+        userId,
+    };
 
     if (type) {
         filter.contactType = type;
@@ -40,11 +43,21 @@ export const getAllContacts = async ({
     };
 };
 
-export const getContactById = (contactId) => Contact.findById(contactId);
+export const getContactById = (contactId, userId) =>
+    Contact.findOne({ _id: contactId, userId });
 
 export const createContact = payload => Contact.create(payload);
 
-export const updateContact = (contactId, payload, options = { new: true }) =>
-    Contact.findByIdAndUpdate(contactId, payload, options);
-
-export const deleteContact = contactId => Contact.findByIdAndDelete(contactId);
+export const updateContact = (
+    contactId,
+    userId,
+    payload,
+    options = { new: true },
+) =>
+    Contact.findOneAndUpdate(
+        { _id: contactId, userId },
+        payload,
+        options,
+    );
+export const deleteContact = (contactId, userId) =>
+    Contact.findOneAndDelete({ _id: contactId, userId });
