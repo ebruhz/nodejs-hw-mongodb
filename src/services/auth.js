@@ -6,6 +6,8 @@ import {
     createAccessToken,
     createRefreshToken,
 } from '../utils/auth.js';
+import jwt from 'jsonwebtoken';
+import nodemailer from 'nodemailer';
 
 export const registerUser = async (payload) => {
     const { name, email, password } = payload;
@@ -128,4 +130,70 @@ export const logoutUser = async (sessionId, refreshToken) => {
     await Session.deleteOne({ _id: session._id });
 
     return true;
+};
+
+export const sendResetEmail = async (email) => {
+    const user = await User.findOne({ email });
+
+    if (!user) {
+        return null;
+    }
+
+    const token = jwt.sign(
+        { email },
+        process.env.JWT_SECRET,
+        { expiresIn: '5m' },
+    );
+
+    const resetLink = `${process.env.APP_DOMAIN}/reset-password?token=${token}`;
+
+    const transporter = nodemailer.createTransport({
+        host: process.env.SMTP_HOST,
+        port: Number(process.env.SMTP_PORT),
+        secure: Number(process.env.SMTP_PORT) === 465,
+        auth: {
+            user: process.env.SMTP_USER,
+            pass: process.env.SMTP_PASSWORD,
+        },
+    });
+
+    await transporter.sendMail({
+        from: process.env.SMTP_FROM,
+        to: email,
+        subject: 'Reset your password',
+        text: `Reset your password using this link: ${resetLink}`,
+        html: `
+            <p>Click the link below to reset your password:</p>
+            <a href="${resetLink}">${resetLink}</a>
+        `,
+    });
+
+    return true;
+};
+
+export const resetPassword = async (token, password) => {
+    let payload;
+
+    try {
+        payload = jwt.verify(token, process.env.JWT_SECRET);
+    } catch (error) {
+        return { error: 'invalid-token' };
+    }
+
+    const user = await User.findOne({ email: payload.email });
+
+    if (!user) {
+        return { error: 'user-not-found' };
+    }
+
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    user.password = hashedPassword;
+    await user.save();
+
+    await Session.deleteMany({
+        userId: user._id.toString(),
+    });
+
+    return { success: true };
 };
