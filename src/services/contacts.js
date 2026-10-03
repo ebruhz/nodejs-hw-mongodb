@@ -1,4 +1,24 @@
 import { Contact } from '../db/contact.js';
+import cloudinary from './cloudinary.js';
+
+const uploadToCloudinary = (file) =>
+    new Promise((resolve, reject) => {
+        const uploadStream = cloudinary.uploader.upload_stream(
+            {
+                folder: 'contacts',
+            },
+            (error, result) => {
+                if (error) {
+                    reject(error);
+                    return;
+                }
+
+                resolve(result.secure_url);
+            },
+        );
+
+        uploadStream.end(file.buffer);
+    });
 
 export const getAllContacts = async ({
     userId,
@@ -20,11 +40,14 @@ export const getAllContacts = async ({
     if (isFavourite !== undefined) {
         filter.isFavourite = isFavourite === 'true';
     }
+
     const skip = (page - 1) * perPage;
 
     const [contacts, totalItems] = await Promise.all([
         Contact.find(filter)
-            .sort({ [sortBy]: sortOrder === 'desc' ? -1 : 1 })
+            .sort({
+                [sortBy]: sortOrder === 'desc' ? -1 : 1,
+            })
             .skip(skip)
             .limit(perPage),
         Contact.countDocuments(filter),
@@ -44,20 +67,53 @@ export const getAllContacts = async ({
 };
 
 export const getContactById = (contactId, userId) =>
-    Contact.findOne({ _id: contactId, userId });
+    Contact.findOne({
+        _id: contactId,
+        userId,
+    });
 
-export const createContact = payload => Contact.create(payload);
+export const createContact = async (payload, file) => {
+    let photo;
 
-export const updateContact = (
+    if (file) {
+        photo = await uploadToCloudinary(file);
+    }
+
+    return Contact.create({
+        ...payload,
+        ...(photo && { photo }),
+    });
+};
+
+export const updateContact = async (
     contactId,
     userId,
     payload,
-    options = { new: true },
-) =>
-    Contact.findOneAndUpdate(
-        { _id: contactId, userId },
-        payload,
-        options,
+    file,
+) => {
+    let updateData = {
+        ...payload,
+    };
+
+    if (file) {
+        const photo = await uploadToCloudinary(file);
+        updateData.photo = photo;
+    }
+
+    return Contact.findOneAndUpdate(
+        {
+            _id: contactId,
+            userId,
+        },
+        updateData,
+        {
+            new: true,
+        },
     );
+};
+
 export const deleteContact = (contactId, userId) =>
-    Contact.findOneAndDelete({ _id: contactId, userId });
+    Contact.findOneAndDelete({
+        _id: contactId,
+        userId,
+    });

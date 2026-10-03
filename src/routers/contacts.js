@@ -1,3 +1,4 @@
+import { upload } from '../middlewares/upload.js';
 import { Router } from 'express';
 
 import {
@@ -36,6 +37,7 @@ router.get(
 router.post(
     '/contacts',
     authenticate,
+    upload.single('photo'),
     validateBody(createContactSchema),
     ctrlWrapper(createContactController),
 );
@@ -44,6 +46,7 @@ router.patch(
     '/contacts/:contactId',
     authenticate,
     isValidId,
+    upload.single('photo'),
     validateBody(updateContactSchema),
     ctrlWrapper(patchContactController),
 );

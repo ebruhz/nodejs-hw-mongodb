@@ -5,6 +5,8 @@ import {
     loginUser,
     refreshSession,
     logoutUser,
+    sendResetEmail,
+    resetPassword,
 } from '../services/auth.js';
 
 export const registerController = async (req, res) => {
@@ -129,4 +131,43 @@ export const logoutController = async (req, res) => {
     res.clearCookie('refreshToken');
 
     res.status(204).send();
+};
+
+export const sendResetEmailController = async (req, res) => {
+    const { email } = req.body;
+
+    const result = await sendResetEmail(email);
+
+    if (result === null) {
+        throw createHttpError(404, 'User not found!');
+    }
+
+    res.status(200).json({
+        status: 200,
+        message: 'Reset password email has been successfully sent.',
+        data: {},
+    });
+};
+
+export const resetPasswordController = async (req, res) => {
+    const { token, password } = req.body;
+
+    const result = await resetPassword(token, password);
+
+    if (result.error === 'invalid-token') {
+        throw createHttpError(
+            401,
+            'Token is expired or invalid.',
+        );
+    }
+
+    if (result.error === 'user-not-found') {
+        throw createHttpError(404, 'User not found!');
+    }
+
+    res.status(200).json({
+        status: 200,
+        message: 'Password has been successfully reset.',
+        data: {},
+    });
 };
