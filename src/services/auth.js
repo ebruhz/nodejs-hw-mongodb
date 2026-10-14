@@ -7,7 +7,7 @@ import {
     createRefreshToken,
 } from '../utils/auth.js';
 import jwt from 'jsonwebtoken';
-import nodemailer from 'nodemailer';
+import * as Brevo from '@getbrevo/brevo';
 
 export const registerUser = async (payload) => {
     const { name, email, password } = payload;
@@ -147,33 +147,30 @@ export const sendResetEmail = async (email) => {
 
     const resetLink = `${process.env.APP_DOMAIN}/reset-password?token=${token}`;
 
-    const transporter = nodemailer.createTransport({
-        host: process.env.SMTP_HOST,
-        port: Number(process.env.SMTP_PORT) || 587,
-        secure: false,
-        auth: {
-            user: process.env.SMTP_USER,
-            pass: process.env.SMTP_PASSWORD,
-        },
-        connectionTimeout: 60000,
-        greetingTimeout: 30000,
-        socketTimeout: 60000,
-    });
+    const apiInstance = new Brevo.TransactionalEmailsApi();
 
-    await transporter.sendMail({
-        from: process.env.SMTP_FROM,
-        to: email,
-        subject: 'Reset your password',
-        text: `Reset your password using this link: ${resetLink}`,
-        html: `
-            <p>Click the link below to reset your password:</p>
-            <a href="${resetLink}">${resetLink}</a>
-        `,
-    });
+    apiInstance.setApiKey(
+        Brevo.TransactionalEmailsApiApiKeys.apiKey,
+        process.env.BREVO_API_KEY,
+    );
+
+    const sendSmtpEmail = new Brevo.SendSmtpEmail();
+
+    sendSmtpEmail.subject = 'Reset your password';
+    sendSmtpEmail.htmlContent = `
+        <p>Click the link below to reset your password:</p>
+        <a href="${resetLink}">${resetLink}</a>
+    `;
+    sendSmtpEmail.sender = {
+        name: 'Password Reset',
+        email: process.env.SMTP_FROM,
+    };
+    sendSmtpEmail.to = [{ email }];
+
+    await apiInstance.sendTransacEmail(sendSmtpEmail);
 
     return true;
 };
-
 export const resetPassword = async (token, password) => {
     let payload;
 
