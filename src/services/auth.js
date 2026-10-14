@@ -7,7 +7,7 @@ import {
     createRefreshToken,
 } from '../utils/auth.js';
 import jwt from 'jsonwebtoken';
-import { TransactionalEmailsApi, SendSmtpEmail, TransactionalEmailsApiApiKeys } from '@getbrevo/brevo';
+import * as Brevo from '@getbrevo/brevo';
 
 export const registerUser = async (payload) => {
     const { name, email, password } = payload;
@@ -131,7 +131,6 @@ export const logoutUser = async (sessionId, refreshToken) => {
 
     return true;
 };
-
 export const sendResetEmail = async (email) => {
     const user = await User.findOne({ email });
 
@@ -147,14 +146,14 @@ export const sendResetEmail = async (email) => {
 
     const resetLink = `${process.env.APP_DOMAIN}/reset-password?token=${token}`;
 
-    const apiInstance = new TransactionalEmailsApi();
+    const apiInstance = new Brevo.TransactionalEmailsApi();
 
     apiInstance.setApiKey(
-        TransactionalEmailsApiApiKeys.apiKey,
+        Brevo.TransactionalEmailsApiApiKeys.apiKey,
         process.env.BREVO_API_KEY,
     );
 
-    const sendSmtpEmail = new SendSmtpEmail();
+    const sendSmtpEmail = new Brevo.SendSmtpEmail();
 
     sendSmtpEmail.subject = 'Reset your password';
     sendSmtpEmail.htmlContent = `
@@ -170,30 +169,4 @@ export const sendResetEmail = async (email) => {
     await apiInstance.sendTransacEmail(sendSmtpEmail);
 
     return true;
-};
-export const resetPassword = async (token, password) => {
-    let payload;
-
-    try {
-        payload = jwt.verify(token, process.env.JWT_SECRET);
-    } catch (error) {
-        return { error: 'invalid-token' };
-    }
-
-    const user = await User.findOne({ email: payload.email });
-
-    if (!user) {
-        return { error: 'user-not-found' };
-    }
-
-    const hashedPassword = await bcrypt.hash(password, 10);
-
-    user.password = hashedPassword;
-    await user.save();
-
-    await Session.deleteMany({
-        userId: user._id.toString(),
-    });
-
-    return { success: true };
 };
