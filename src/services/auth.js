@@ -7,7 +7,7 @@ import {
     createRefreshToken,
 } from '../utils/auth.js';
 import jwt from 'jsonwebtoken';
-import * as Brevo from '@getbrevo/brevo';
+import { TransactionalEmailsApi, SendSmtpEmail, TransactionalEmailsApiApiKeys } from '@getbrevo/brevo';
 
 export const registerUser = async (payload) => {
     const { name, email, password } = payload;
@@ -147,14 +147,14 @@ export const sendResetEmail = async (email) => {
 
     const resetLink = `${process.env.APP_DOMAIN}/reset-password?token=${token}`;
 
-    const apiInstance = new Brevo.TransactionalEmailsApi();
+    const apiInstance = new TransactionalEmailsApi();
 
     apiInstance.setApiKey(
-        Brevo.TransactionalEmailsApiApiKeys.apiKey,
+        TransactionalEmailsApiApiKeys.apiKey,
         process.env.BREVO_API_KEY,
     );
 
-    const sendSmtpEmail = new Brevo.SendSmtpEmail();
+    const sendSmtpEmail = new SendSmtpEmail();
 
     sendSmtpEmail.subject = 'Reset your password';
     sendSmtpEmail.htmlContent = `
