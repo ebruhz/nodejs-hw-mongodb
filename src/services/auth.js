@@ -149,12 +149,15 @@ export const sendResetEmail = async (email) => {
 
     const transporter = nodemailer.createTransport({
         host: process.env.SMTP_HOST,
-        port: Number(process.env.SMTP_PORT),
-        secure: Number(process.env.SMTP_PORT) === 465,
+        port: Number(process.env.SMTP_PORT) || 587,
+        secure: false,
         auth: {
             user: process.env.SMTP_USER,
             pass: process.env.SMTP_PASSWORD,
         },
+        connectionTimeout: 60000,
+        greetingTimeout: 30000,
+        socketTimeout: 60000,
     });
 
     await transporter.sendMail({
