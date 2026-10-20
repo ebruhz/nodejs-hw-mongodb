@@ -10,11 +10,11 @@ info:
 tags:
   - name: Contacts
     description: Contacts management endpoints
-
 servers:
   - url: http://localhost:3000
     description: Local server
-
+  - url: https://nodejs-hw-mongodb-nzpx.onrender.com
+    description: Production server
 paths:
   /contacts:
     get:
