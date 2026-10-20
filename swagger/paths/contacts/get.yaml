@@ -1,0 +1,48 @@
+tags:
+  - Contacts
+summary: Get all contacts
+operationId: getAllContacts
+description: Retrieve contacts belonging to the authenticated user with pagination and filtering.
+security:
+  - bearerAuth: []
+parameters:
+  - in: query
+    name: page
+    schema:
+      type: integer
+      default: 1
+    description: Page number
+  - in: query
+    name: perPage
+    schema:
+      type: integer
+      default: 10
+    description: Number of contacts per page
+  - in: query
+    name: sortBy
+    schema:
+      type: string
+      default: name
+    description: Field used to sort contacts
+  - in: query
+    name: sortOrder
+    schema:
+      type: string
+      enum: [asc, desc]
+      default: asc
+    description: Sorting order
+  - in: query
+    name: type
+    schema:
+      type: string
+    description: Filter contacts by type
+  - in: query
+    name: isFavourite
+    schema:
+      type: boolean
+    description: Filter contacts by favourite status
+responses:
+  '200':
+    description: Contacts successfully retrieved
+  '401':
+    description: Unauthorized

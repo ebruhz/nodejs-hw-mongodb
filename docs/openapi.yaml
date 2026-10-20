@@ -1,0 +1,54 @@
+openapi: 3.1.0
+
+info:
+  version: 1.0.0
+  title: Node.js Contacts API
+  license:
+    name: ISC
+  description: API for managing contacts and user authentication.
+
+tags:
+  - name: Contacts
+    description: Contacts management endpoints
+
+servers:
+  - url: http://localhost:3000
+    description: Local server
+
+paths:
+  /contacts:
+    get:
+      $ref: ../swagger/paths/contacts/get.yaml
+    post:
+      $ref: ../swagger/paths/contacts/post.yaml
+
+  /contacts/{contactId}:
+    get:
+      $ref: ../swagger/paths/contacts/{id}/get.yaml
+    patch:
+      $ref: ../swagger/paths/contacts/{id}/patch.yaml
+    delete:
+      $ref: ../swagger/paths/contacts/{id}/delete.yaml
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    Contact:
+      $ref: ../swagger/components/schemas.yaml#/Contact
+    ContactInput:
+      $ref: ../swagger/components/schemas.yaml#/ContactInput
+    ContactUpdate:
+      $ref: ../swagger/components/schemas.yaml#/ContactUpdate
+
+  responses:
+    Unauthorized:
+      $ref: ../swagger/components/responses.yaml#/Unauthorized
+    NotFound:
+      $ref: ../swagger/components/responses.yaml#/NotFound
+    BadRequest:
+      $ref: ../swagger/components/responses.yaml#/BadRequest

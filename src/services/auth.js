@@ -171,7 +171,7 @@ export const resetPassword = async (token, password) => {
 
     try {
         payload = jwt.verify(token, process.env.JWT_SECRET);
-    } catch (error) {
+    } catch {
         return { error: 'invalid-token' };
     }
 
