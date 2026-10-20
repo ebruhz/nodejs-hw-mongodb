@@ -1,0 +1,86 @@
+Contact:
+  type: object
+  required:
+    - name
+    - phoneNumber
+    - contactType
+  properties:
+    _id:
+      type: string
+      description: Contact ID
+    name:
+      type: string
+      minLength: 3
+      maxLength: 20
+    phoneNumber:
+      type: string
+      minLength: 3
+      maxLength: 20
+    email:
+      type: string
+      format: email
+    isFavourite:
+      type: boolean
+    contactType:
+      type: string
+      enum:
+        - work
+        - home
+        - personal
+    photo:
+      type: string
+      format: uri
+      description: Contact photo URL
+
+ContactInput:
+  type: object
+  required:
+    - name
+    - phoneNumber
+    - contactType
+  properties:
+    name:
+      type: string
+      minLength: 3
+      maxLength: 20
+    phoneNumber:
+      type: string
+      minLength: 3
+      maxLength: 20
+    email:
+      type: string
+      format: email
+    isFavourite:
+      type: boolean
+    contactType:
+      type: string
+      enum:
+        - work
+        - home
+        - personal
+
+ContactUpdate:
+  type: object
+  properties:
+    name:
+      type: string
+      minLength: 3
+      maxLength: 20
+    phoneNumber:
+      type: string
+      minLength: 3
+      maxLength: 20
+    email:
+      type: string
+      format: email
+    isFavourite:
+      type: boolean
+    contactType:
+      type: string
+      enum:
+        - work
+        - home
+        - personal
+    photo:
+      type: string
+      format: binary

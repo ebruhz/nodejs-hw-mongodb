@@ -7,7 +7,7 @@ import {
     createRefreshToken,
 } from '../utils/auth.js';
 import jwt from 'jsonwebtoken';
-import nodemailer from 'nodemailer';
+import { BrevoClient } from '@getbrevo/brevo';
 
 export const registerUser = async (payload) => {
     const { name, email, password } = payload;
@@ -130,9 +130,7 @@ export const logoutUser = async (sessionId, refreshToken) => {
     await Session.deleteOne({ _id: session._id });
 
     return true;
-};
-
-export const sendResetEmail = async (email) => {
+}; export const sendResetEmail = async (email) => {
     const user = await User.findOne({ email });
 
     if (!user) {
@@ -147,28 +145,22 @@ export const sendResetEmail = async (email) => {
 
     const resetLink = `${process.env.APP_DOMAIN}/reset-password?token=${token}`;
 
-    const transporter = nodemailer.createTransport({
-        host: process.env.SMTP_HOST,
-        port: Number(process.env.SMTP_PORT) || 587,
-        secure: false,
-        auth: {
-            user: process.env.SMTP_USER,
-            pass: process.env.SMTP_PASSWORD,
-        },
-        connectionTimeout: 60000,
-        greetingTimeout: 30000,
-        socketTimeout: 60000,
+    const brevo = new BrevoClient({
+        apiKey: process.env.BREVO_API_KEY,
     });
 
-    await transporter.sendMail({
-        from: process.env.SMTP_FROM,
-        to: email,
+    await brevo.transactionalEmails.sendTransacEmail({
         subject: 'Reset your password',
-        text: `Reset your password using this link: ${resetLink}`,
-        html: `
+        htmlContent: `
             <p>Click the link below to reset your password:</p>
             <a href="${resetLink}">${resetLink}</a>
         `,
+        textContent: `Reset your password using this link: ${resetLink}`,
+        sender: {
+            name: 'Password Reset',
+            email: process.env.SMTP_FROM,
+        },
+        to: [{ email }],
     });
 
     return true;
@@ -179,7 +171,7 @@ export const resetPassword = async (token, password) => {
 
     try {
         payload = jwt.verify(token, process.env.JWT_SECRET);
-    } catch (error) {
+    } catch {
         return { error: 'invalid-token' };
     }
 

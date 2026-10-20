@@ -2,10 +2,25 @@ import cookieParser from 'cookie-parser';
 import express from 'express';
 import cors from 'cors';
 import pino from 'pino-http';
+import swaggerUi from 'swagger-ui-express';
+import fs from 'node:fs';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
+
 import contactsRouter from './routers/contacts.js';
 import authRouter from './routers/auth.js';
 import { errorHandler } from './middlewares/errorHandler.js';
 import { notFoundHandler } from './middlewares/notFoundHandler.js';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+const swaggerDocument = JSON.parse(
+    fs.readFileSync(
+        path.resolve(__dirname, '../docs/swagger.json'),
+        'utf8',
+    ),
+);
 
 export const setupServer = () => {
     const app = express();
@@ -14,6 +29,8 @@ export const setupServer = () => {
     app.use(pino());
     app.use(express.json());
     app.use(cookieParser());
+
+    app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
 
     app.use(contactsRouter);
     app.use(authRouter);
